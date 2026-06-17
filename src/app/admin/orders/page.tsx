@@ -5,6 +5,7 @@ import Link from "next/link";
 
 interface OrderItem {
   id: number;
+  productName: string;
   product: { name: string };
   quantity: number;
   price: number;
@@ -103,7 +104,7 @@ export default function AdminOrdersPage() {
               <div className="space-y-1 text-sm">
                 {order.items.map((item) => (
                   <div key={item.id} className="flex justify-between">
-                    <span>{item.product.name} × {item.quantity}</span>
+                    <span>{item.productName || item.product?.name} × {item.quantity}</span>
                     <span>¥{(Number(item.price) * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}

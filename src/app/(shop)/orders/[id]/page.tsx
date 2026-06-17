@@ -78,7 +78,7 @@ export default function OrderDetailPage() {
           {items.map((item) => (
             <div key={item.id as number} className="flex justify-between border-b pb-3">
               <div>
-                <p className="font-medium">{(item.product as Record<string, unknown>)?.name as string}</p>
+                <p className="font-medium">{item.productName as string}</p>
                 <p className="text-sm text-gray-400">
                   单价 ¥{Number(item.price).toFixed(2)} × {item.quantity as number}
                 </p>
