@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户 ====================
+model User {
+  id          Int          @id @default(autoincrement())
+  username    String       @unique
+  email       String       @unique
+  password    String
+  role        Role         @default(USER)
+
+  // 心悦会员
+  totalSpent  Decimal      @default(0)
+  memberLevel MemberLevel  @default(NONE)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  cartItems   CartItem[]
+  orders      Order[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MemberLevel {
+  NONE
+  XINYUE_1
+  XINYUE_2
+  XINYUE_3
+}
+
+// ==================== 商品分类 ====================
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+
+  createdAt DateTime  @default(now())
+
+  products  Product[]
+}
+
+// ==================== 商品 ====================
+model Product {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String        @default("")
+  price       Decimal
+  stock       Int           @default(0)
+  image       String        @default("")
+  status      ProductStatus @default(ACTIVE)
+  categoryId  Int
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category    Category      @relation(fields: [categoryId], references: [id])
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ==================== 购物车 ====================
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+// ==================== 订单 ====================
+model Order {
+  id           Int          @id @default(autoincrement())
+  userId       Int
+  subtotal     Decimal
+  discount     Decimal      @default(0)
+  total        Decimal
+  discountRate Decimal      @default(1.0)
+  memberLevel  MemberLevel  @default(NONE)
+  status       OrderStatus  @default(PENDING)
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id])
+  items        OrderItem[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+// ==================== 订单明细 ====================
+model OrderItem {
+  id          Int     @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  productName String  // 下单时快照商品名，防止后续改名影响历史订单
+  quantity    Int
+  price       Decimal // 下单时快照价格，防止后续调价影响历史订单
+
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+}
